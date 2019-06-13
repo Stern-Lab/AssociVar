@@ -77,7 +77,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--input_blast_df", type=str, help="path to blasts df csv", required=True)
     parser.add_argument('-m', '--input_mutation_df', type=str, help='path to mutations df csv', required=True)
-    parser.add_argument('-p', '--input_chosen_mutation', type=str, help='path to csv file with mutations to check linkage of. Every mutation should have its own row, a header row titled "variant", and the mutations should be written in the following format: "A1664.0G"', required=True)
+    parser.add_argument('-p', '--input_chosen_mutations', type=str, help='path to csv file with mutations to check linkage of. Every mutation should have its own row, a header row titled "variant", and the mutations should be written in the following format: "A1664.0G"', required=True)
     parser.add_argument("-o", "--output_file", type=str, help="a path to an output file", required=True)
     args = parser.parse_args()
     if not vars(args):
