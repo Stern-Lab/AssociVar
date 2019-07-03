@@ -34,8 +34,26 @@ def mutation_pairings_statistics(args):
     blast_df = blast_df[(blast_df.read_count == 1)]
   
     # conditional statistics
-    matrix = pd.DataFrame(np.zeros(shape=(len(recognized_mutations)*2,len(recognized_mutations)*2)), columns = recognized_mutations + [f[1:-1].split('.')[0] for f in recognized_mutations], index = recognized_mutations + [f[1:-1].split('.')[0] for f in recognized_mutations])
+    matrix = pd.DataFrame(np.zeros(shape=(len(recognized_mutations)*2 + 1,len(recognized_mutations)*2)), columns = recognized_mutations + [f[1:-1].split('.')[0] for f in recognized_mutations], index = recognized_mutations + [f[1:-1].split('.')[0] for f in recognized_mutations] + ['P(column)'])
     for mutation_1 in recognized_mutations:
+        b = blast_df.copy()
+        m = mutations_df.copy()
+        # keep only alignments containing both positions for mutations 1 and 2.
+        b = b[((b.start_ref < int(mutation_1[1:-1].split('.')[0])) & (b.end_ref > int(mutation_1[1:-1].split('.')[0])))]
+        b = b[['read']]
+        # look only at mutations in positions i and j
+        m = m[m.position.isin([int(mutation_1[1:-1].split('.')[0])])]
+        # keep all reads that contain positions i and j (both containing mutations in i and/or j 
+        # and not containing mutations there), and their appropriate mutations.
+        relevant_mutations = pd.merge(b, m, on='read', how='left').fillna(0)
+            
+        # only keep reads with WT or known mutations. Discard reads with unknown mutations in the checked positions.
+        # reads to drop:
+        reads_to_drop = m[~(m.full_mutation.isin(recognized_mutations))].read.tolist()
+        # dropping:
+        relevant_mutations = relevant_mutations[~(relevant_mutations.read.isin(reads_to_drop))]
+        matrix.at['P(column)', mutation_1] = len(relevant_mutations[relevant_mutations.full_mutation == mutation_1][['read']].drop_duplicates()) / len(relevant_mutations.read.drop_duplicates())
+        matrix.at['P(column)', mutation_1[1:-1].split('.')[0]] = 1 - (len(relevant_mutations[relevant_mutations.full_mutation == mutation_1][['read']].drop_duplicates()) / len(relevant_mutations.read.drop_duplicates()))
         for mutation_2 in recognized_mutations:
             print (mutation_1, mutation_2)
             b = blast_df.copy()

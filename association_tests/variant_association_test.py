@@ -12,6 +12,8 @@ import os
 def variant_association_test(args, recognized_positions):
     '''
     '''    
+    position_list = [float(p) for p in pd.read_csv(args.input_chosen_positions, header=None)[0].tolist()] 
+
     os.mkdir(args.output_dir + '/' + 'extras/')
     blast_df = pd.read_csv(args.input_blast_df)
     # choose only reads that were mapped only once in blast
@@ -82,18 +84,9 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--input_blast_df", type=str, help="path to blasts df csv", required=True)
     parser.add_argument('-m', '--input_mutation_df', type=str, help='path to mutations df csv', required=True)
     parser.add_argument('-p', '--input_chosen_positions', type=str, help='path to csv file with positions to check associations for. Every position should have its own row, no header row. The script requires options either z or p to be used.', required=False)
-    parser.add_argument('-z', '--input_peaks_zscore_output', type=str, help='path to csv file output from peaks_modified_zscore. The script requires options either z or p to be used.', required=False)
     parser.add_argument("-o", "--output_dir", type=str, help="a path to an output directory", required=True)
     args = parser.parse_args()
     if not vars(args):
         parser.print_help()
         parser.exit(1)
-    if args.input_peaks_zscore_output:
-        df = pd.read_csv(args.input_peaks_zscore_output)
-        position_list = list(set(df[df.is_peak == True].pos1.tolist() + df[df.is_peak == True].pos2.tolist()))
-    elif args.input_chosen_positions:
-        position_list = [float(p) for p in pd.read_csv(args.input_chosen_positions, header=None)[0].tolist()] 
-    else:
-        parser.print_help()
-        parser.exit(1)
-    variant_association_test(args, position_list)
+    variant_association_test(args)

@@ -34,7 +34,7 @@ association test script to use when being run as many jobs in parallel (choose n
 4. Run association_test.py scripts, recommended as a job array. This uses the blasts dataframe,
 mutations dataframe and the position couple index file created in 2-3. Each job runs chi square association tests
 for every pair of positions from the position couple index file for which the index matches the job id. It saves
-both the contingency tables for every pair of positions, and a csv containing all of the chi2 results. Also recieves
+the contingency tables for every pair of positions, and a csv containing all of the chi2 results. Also recieves
 start_pos_read and end_pos_read, and only reads spanning these positions are used in the analysis.
 
    - usage: association_test.py [-h] -b INPUT_BLAST_DF -m INPUT_MUTATION_DF -i
@@ -49,30 +49,29 @@ with the chi square statistic value and the p-value for every pair of positions 
    - usage: unify_association_results.py [-h] -i INPUT_RESULTS_DIRECTORY -o
                                     OUTPUT_CSV
 
-6. Normalize chi square results by using the modified z-test. Gets an input path of a csv with all chi2 results and an output path to   write the z-test results to.
+6. Normalize chi square results by using the modified z-test and determines for each association if it is higher than its two neighbors (is_peak column). Gets an input path of a csv with all chi2 results and an output path to   write the z-test results to.
 
-   - usage: chi2_modified_ztest.py [-h] -i INPUT_PATH -o OUTPUT_PATH
+   - usage: normalize_chi2.py [-h] -i INPUT_PATH -o OUTPUT_PATH
 
 							   
-If this is a control sample used to find a cutoff for the association, use modified_zscore_find_cutoff.py. This script gets a csv with the pos1, pos2 and modified zscores created by chi2_modified_ztest.py, 
+If this is a control sample used to find a cutoff for the association, use normalized_chi2_find_cutoff.py. This script gets a csv with the pos1, pos2 and modified zscores created by normalize_chi2.py, 
 and a confidence percentile. For example, for a cutoff percentile of 99.9, the cutoff is determined as the score that identifies 0.1 percent of the positions as having significant associations. The cutoff
 printed to the screen. 
 
-   - usage: modifed_zscore_find_cutoff.py [-h] -i INPUT_CSV -o OUTPUT_CSV -c
+   - usage: normalized_chi2_find_cutoff.py [-h] -i INPUT_CSV -o OUTPUT_CSV -c
                                      CONFIDENCE_PERCENTILE		   
 
-If this is not a control sample, use peaks_modified_zscore.py to find the most signifcant associations that also answer to being a peak in their surroundings. This script gets a csv with the pos1, pos2 and modified zscores created by chi2_modified_ztest.py, 
-an output path to write the most significant scores to, and a modified_zscore_cutoff to use. If using the script without a set cutoff, set a cutoff by eye that is higher than 0, because a cutoff of 0 will result in an incredibly long run time.
+If this is not a control sample, use normalized_chi2_get_positions.py to get the positions that are identified as having real variants by AssociVar. This script gets a csv with the pos1, pos2, modified zscores and is_peak column created by normalize_chi2.py, 
+an output path to write the positions to, and a modified_zscore_cutoff to use.
 					 
-   - usage: peaks_modified_zscore.py [-h] -i INPUT_CSV -o OUTPUT_CSV -z
+   - usage: normalized_chi2_get_positions.py [-h] -i INPUT_CSV -o OUTPUT_CSV -z
                                 MODIFIED_ZSCORE_CUTOFF
 
 We also provide visualization tools to help identify positions with real mutations in the association test results. Helpful functions are provided in tools_to_visualize_association_results.py.
 
 To transform the identified positions into specific variants, use variant_association_test.py. The script uses the blasts dataframe and mutations dataframe created in steps 2-3. The script also gets
-the positions to analyze by one of two options: either using the output file created by peaks_modified_zscore (option z), or by providing a csv with no header where every row is a position to analyze (option p). The script
+the positions to analyze in the format of csv with no header where every row is a position to analyze (option p) as created by normalized_chi2_get_positions.py. The script
 writes the results and the final variant list in chosen_variants.csv to the output directory.
    - usage: variant_association_test.py [-h] -b INPUT_BLAST_DF -m INPUT_MUTATION_DF
-                                   [-p INPUT_CHOSEN_POSITIONS]
-                                   [-z INPUT_PEAKS_ZSCORE_OUTPUT] -o
+                                   -p INPUT_CHOSEN_POSITIONS -o
                                    OUTPUT_DIR
