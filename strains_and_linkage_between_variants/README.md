@@ -92,4 +92,5 @@ calculate_linkage.py [-h] -b INPUT_BLAST_DF -m INPUT_MUTATION_DF -p
 
 Each cell represents the probability of the column when row is true (P(column|row)).
 Row and column names represent either the mutation variant or the WT for that position. For example, "A535.0G" represents the mutation A to G at position 535, and "535" represents the WT base for that position.
+Bottom row shows the probabilty of the column variant (no conditionality).
 It is recommended to open with excel and use Conditional Formatting > Color Scales to view this as presented in the article.
