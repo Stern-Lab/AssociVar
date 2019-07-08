@@ -1,5 +1,5 @@
 We provide two ways to analyze the linkage between variants, or to identify the different strains in a population:
-1. Split the population up into strains, where we define a strain as a combination of the occurence or lack of occurence of the varaints provided. 
+1. Split the population up into strains, where we define a strain as a combination of the occurrence or lack of occurrence of the variants provided.
 2. For a provided list of variants, determine the linkage between every pair of variants. 
 
 Both scripts require a list of variants to focus on. This list can either be created by AssociVar or provided by the user.

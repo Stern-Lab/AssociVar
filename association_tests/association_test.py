@@ -6,6 +6,7 @@ import numpy as np
 import os
 import argparse
 import scipy.stats
+from tqdm import tqdm
 
 
 def association_test(args):
@@ -14,6 +15,16 @@ def association_test(args):
     the job id. The function gets the blast dataframe path, the mutations dataframe
     path, the association coupe index file and a directory to save the results to.
     '''
+    couples = pd.read_csv(args.input_position_pairs_df)
+    # get position couples with the association index the same as the job id.
+    position_tuple_list = list(
+        couples[(couples.association_index == int(args.pbs_job_array_id))][['i', 'j']].itertuples(index=False,
+                                                                                                name=None))
+    if args.start_pos_read is None:
+        args.start_pos_read = couples.i.min()
+    if args.end_pos_read is None:
+        args.end_pos_read = couples.i.max()
+
     blast_df = pd.read_csv(args.input_blast_df)
     # choose only reads that were mapped only once in blast
     blast_df['read_count'] = blast_df.groupby('read')['start_ref'].transform('count')
@@ -30,15 +41,11 @@ def association_test(args):
     # create directory for specific job id if does not exist already
     if not os.path.exists(association_test_dir):
         os.mkdir(association_test_dir)    
-    couples = pd.read_csv(args.input_position_pairs_df)
-    # get position couples with the association index the same as the job id.
-    position_tuple_list = list(couples[(couples.association_index == int(args.pbs_job_array_id))][['i','j']].itertuples(index=False, name=None))
-    
+
     chi2_data = []
     
-    for (i, j) in position_tuple_list:
+    for (i, j) in tqdm(position_tuple_list):
         if not os.path.isfile(association_test_dir + str(i) + '_' + str(j) + '.csv') and not os.path.isfile(association_test_dir + str(j) + '_' + str(i) + '.csv'):
-            print((i,j))
             temp_matrix = pd.DataFrame(np.zeros(shape=(2,2)), columns=[j,0], index=[i,0])
             b = blast_df.copy()
             m = mutations_df.copy()
@@ -84,8 +91,8 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--input_mutation_df', type=str, help='path to mutations df csv', required=True)
     parser.add_argument('-i', '--input_position_pairs_df', type=str, help='path to position pairs index df, created by create_couples_index_file.py', required=True)
     parser.add_argument("-o", "--output_dir", type=str, help="a path to an output directory", required=True)
-    parser.add_argument('-s', '--start_pos_read', type=int, help='require blast reads to start from at least this position', required=True)
-    parser.add_argument('-e', '--end_pos_read', type=int, help='require blast reads to end at least at this position', required=True)
+    parser.add_argument('-s', '--start_pos_read', type=int, help='require blast reads to start from at least this position', required=False)
+    parser.add_argument('-e', '--end_pos_read', type=int, help='require blast reads to end at least at this position', required=False)
     parser.add_argument('-j', '--pbs_job_array_id', type=int, help='pbs job array id, used to choose pairs of positions to check.', required=True)
     args = parser.parse_args()
     if not vars(args):

@@ -9,12 +9,11 @@ import itertools
 from tqdm import tqdm
 import os
 
-def variant_association_test(args, recognized_positions):
+def variant_association_test(args):
     '''
     '''    
-    position_list = [float(p) for p in pd.read_csv(args.input_chosen_positions, header=None)[0].tolist()] 
+    recognized_positions = [float(p) for p in pd.read_csv(args.input_chosen_positions, header=None)[0].tolist()] 
 
-    os.mkdir(args.output_dir + '/' + 'extras/')
     blast_df = pd.read_csv(args.input_blast_df)
     # choose only reads that were mapped only once in blast
     blast_df['read_count'] = blast_df.groupby('read')['start_ref'].transform('count')
@@ -63,13 +62,13 @@ def variant_association_test(args, recognized_positions):
         temp_matrix.at[0,0] = reads_with_wt_i_wt_j
         # run association test on matrix and write results to file.
         if temp_matrix.sum(axis=0).all() > 0 and temp_matrix.sum(axis=1).all() > 0:
-            temp_matrix.to_csv(args.output_dir + '/extras/' + str(i) + '_' + str(j) + '.csv')
+            #temp_matrix.to_csv(args.output_dir + '/extras/' + str(i) + '_' + str(j) + '.csv')
             chi2, pvalue, dof, expected = scipy.stats.chi2_contingency(temp_matrix)
             chi2_data.append((i,j,pvalue,chi2))
             chi2_data.append((j,i,pvalue,chi2))
             
     df = pd.DataFrame(chi2_data, columns=['variant1', 'variant2', 'pvalue', 'chi2'])
-    df.to_csv(args.output_dir  + '/extras/variant_association_results.csv', index=False)
+    df.to_csv(args.output_dir  + '/variant_association_results.csv', index=False)
     
     a = df.groupby('variant1').chi2.mean().reset_index().sort_values('chi2')
     a['pos1'] = a.variant1.str[1:-1].astype(float)
@@ -83,7 +82,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--input_blast_df", type=str, help="path to blasts df csv", required=True)
     parser.add_argument('-m', '--input_mutation_df', type=str, help='path to mutations df csv', required=True)
-    parser.add_argument('-p', '--input_chosen_positions', type=str, help='path to csv file with positions to check associations for. Every position should have its own row, no header row. The script requires options either z or p to be used.', required=False)
+    parser.add_argument('-p', '--input_chosen_positions', type=str, help='path to csv file with positions to check associations for. Every position should have its own row, no header row.', required=False)
     parser.add_argument("-o", "--output_dir", type=str, help="a path to an output directory", required=True)
     args = parser.parse_args()
     if not vars(args):

@@ -19,7 +19,7 @@ def main(args):
       
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--start_position', type=int, help='start position for association tests', default = 1, required=False)
+    parser.add_argument('-s', '--start_position', type=int, help='start position for association tests', required=True)
     parser.add_argument('-e', '--end_position', type=int, help='end position for association tests', required=True)
     parser.add_argument('-j', '--number_of_jobs', type=int, help='number of pbs jobs to split association tests into', required=True)
     parser.add_argument('-o', '--output_file', type=str, help='path to save index file to', required=True)
