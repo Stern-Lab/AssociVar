@@ -23,7 +23,7 @@ Parameters:
    - Typical use case:
      - sed '/^@/!d;s//>/;N' ${in_fastq} > ${in_fasta} # fastq to fasta
      - makeblastdb -in ${in_fasta} -dbtype nucl
-     - blastn -query ${ref_genome} -taskblastn -db ${in_fasta} -outfmt "6 sseqid qstart qend qstrand sstart send sstrand length btop" -num_alignments ${max_num_alignments} -dust no -soft_masking F -perc_identity ${pcID_blast} -evalue 1e-7 -out ${out_blast}
+     - blastn -query ${ref_genome} -task blastn -db ${in_fasta} -outfmt "6 sseqid qstart qend qstrand sstart send sstrand length btop" -num_alignments ${max_num_alignments} -dust no -soft_masking F -perc_identity ${pcID_blast} -evalue 1e-7 -out ${out_blast}
 
 
 2. Run parse_blasts.py to create two output files: a dataframe of all blast outputs and a dataframe
