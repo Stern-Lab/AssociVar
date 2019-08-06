@@ -3,6 +3,7 @@
 
 import pandas as pd
 import argparse
+import numpy as np
 
 def count_haplotypes(args):
     '''
@@ -40,12 +41,13 @@ def count_haplotypes(args):
     df = pd.merge(mutations_df, blast_df[['read']], how='right', on='read')
     
     # simple frequencies for every mutation, keep only mutations over mininmal mutation frequency (default 0)
-    mutations_for_downstream = []
+    base_variants = []
     for m in df.full_mutation.drop_duplicates().tolist():
-        if (len(df[df.full_mutation == m].read.drop_duplicates()) / len(df.read.drop_duplicates())) >= args.minimal_mutation_frequency:
-            mutations_for_downstream.append(m)
+        m_freq = (len(df[df.full_mutation == m].read.drop_duplicates()) / len(df.read.drop_duplicates()))
+        if (m_freq >= args.minimal_mutation_frequency) and (str(m) != 'nan'):
+            base_variants.append(m)
     
-    mutations_df = mutations_df[mutations_df.full_mutation.isin(mutations_for_downstream)]
+    mutations_df = mutations_df[mutations_df.full_mutation.isin(base_variants)]
     df = pd.merge(mutations_df, blast_df[['read']], how='right', on='read')
     
     df = df.sort_values('position')
@@ -56,38 +58,35 @@ def count_haplotypes(args):
     df_counts['read_frequency'] = df_counts.read_count / df_counts.read_count.sum()
     df_counts['mutations_on_read'] = df_counts.mutations_on_read.str.replace('nan', 'WT')
     
-    # For every strain, calculate its percentage out of all the population containing the 
-    # lowest appearing variant in the strain. This percentage can later be used as a cutoff
-    # using the 90th percentile error frequency for example.
-    recognized_dict = {}
-    for i in recognized_mutations:
-        recognized_dict[i] = df_counts[df_counts.mutations_on_read.str.contains(i)].read_frequency.sum()
-    df_counts[['critical_variant_total_frequency', 'critical_variant']] = df_counts.mutations_on_read.apply(lambda x: get_critical_variant_freq(x, recognized_dict)).apply(pd.Series)
-    df_counts['frequency_for_error_cutoff'] = df_counts.read_frequency / df_counts.critical_variant_total_frequency
-    df_counts = choose_believable_strains(df_counts.reset_index(drop=True), args.substitution_error_cutoff, args.deletion_error_cutoff)
-    df_counts.to_csv(args.output_file, index=False)
     
-    # create results with only believable strains, and recalculate frequencies so they add up to 1.
-    b = df_counts[df_counts.believable == True][['mutations_on_read', 'read_count']].copy()
-    b['frequency'] = b.read_count / b.read_count.sum()
-    b = b.rename(columns={'mutations_on_read':'strain'})
-    b.to_csv(args.output_file + '.believable.csv', index=False)
-    return
+    ####### now decide which strains are believable
+    df_counts_reliable = []
+    # classify strains within each base variant
+    for i in base_variants:
+        print(i)
+        df1 = df_counts[df_counts.mutations_on_read.str.contains(i)].copy().reset_index(drop=True)
+        df1['base_variant'] = i
+        df1['relative_frequency'] = df1.read_frequency / df1.read_frequency.sum()
+        df1 = df1.sort_values('relative_frequency', ascending=False)
+        df1 = choose_believable_strains(df1, args.substitution_error_cutoff, args.deletion_error_cutoff)
+        df_counts_reliable.append(df1)
+    # WT as base variant
+    df1 = df_counts.copy().reset_index(drop=True)
+    df1['base_variant'] = 'WT'
+    df1['relative_frequency'] = df1.read_frequency / df1.read_frequency.sum()
+    df1 = df1.sort_values('relative_frequency', ascending=False)
+    df1 = choose_believable_strains(df1, args.substitution_error_cutoff, args.deletion_error_cutoff)
+    df_counts_reliable.append(df1) 
+    
+    df_counts_reliable = pd.concat(df_counts_reliable)
+    df_counts_reliable.to_csv(args.output_file, index=False)
 
-def get_critical_variant_freq(mutations_on_read, recognized_dict):
-    mutations_on_read = mutations_on_read.split(', ')
-    smallest_variant = None
-    smallest_freq = 1.0
-    for m in recognized_dict:
-        if m in mutations_on_read:
-            if recognized_dict[m] < smallest_freq:
-                smallest_freq = recognized_dict[m]
-                smallest_variant = m
-        else:
-            if (1.0 - recognized_dict[m]) < smallest_freq:
-                smallest_freq = (1.0 - recognized_dict[m])
-                smallest_variant = m[:-1] + m[0]
-    return (smallest_freq, smallest_variant)
+    # create results with only believable strains, and recalculate their relative frequency.
+    df_reliable = df_counts_reliable[df_counts_reliable.believable == True][['mutations_on_read', 'read_count']].drop_duplicates().copy()
+    df_reliable['frequency'] = df_reliable.read_count / df_reliable.read_count.sum()
+    df_reliable = df_reliable.rename(columns={'mutations_on_read':'strain'})
+    df_reliable.sort_values('frequency', ascending=False).to_csv(args.output_file + '.reliable.csv', index=False)
+    return
 
 
 def choose_believable_strains(df, substitution_error_cutoff, deletion_error_cutoff):
@@ -113,7 +112,7 @@ def choose_believable_strains(df, substitution_error_cutoff, deletion_error_cuto
                     smallest_diff = diffs
         df.at[i, 'closest_strain'] = closest_strain
         df.at[i, 'smallest_diff'] = smallest_diff
-        if ((substitution_error_cutoff**(len(smallest_diff) - [i[-1] for i in smallest_diff].count('-'))) * (deletion_error_cutoff**([i[-1] for i in smallest_diff].count('-')))) <= df.at[i, 'frequency_for_error_cutoff']:
+        if ((substitution_error_cutoff**(len(smallest_diff) - [i[-1] for i in smallest_diff].count('-'))) * (deletion_error_cutoff**([i[-1] for i in smallest_diff].count('-')))) <= df.at[i, 'relative_frequency']:
             df.at[i, 'believable'] = True
     return df
 
@@ -125,9 +124,9 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--input_mutation_df', type=str, help='path to mutations df csv', required=True)
     parser.add_argument('-p', '--input_chosen_mutations', type=str, help='path to csv file with mutations to separate into strains. Every mutation should have its own row, the header row titled "variant", and the mutations should be written in the following format: "A1664.0G". The output file variants_chosen.csv from association_test_variant.py can be used here.', required=True)
     parser.add_argument("-o", "--output_file", type=str, help="a path to an output file", required=True)
-    parser.add_argument('-f', '--minimal_mutation_frequency', type=float, required=False , default=0, help='frequency cutoff for a single mutation. Only mutations that are on the list and appear at least in this frequency in the population will be included in the strain analysis.')
     parser.add_argument('-d', '--deletion_error_cutoff', type=float, required=True)
     parser.add_argument('-s', '--substitution_error_cutoff', type=float, required=True)
+    parser.add_argument('-f', '--minimal_mutation_frequency', type=float, required=False , default=0, help='frequency cutoff for a single mutation. Only mutations that are on the list and appear at least in this frequency in the population will be included in the strain analysis.')
     args = parser.parse_args()
     if not vars(args):
         parser.print_help()
