@@ -4,7 +4,7 @@ We provide two ways to analyze the linkage between variants, or to identify the 
 
 Both scripts require a list of variants to focus on. This list can either be created by AssociVar or provided by the user.
 
-**Format for the csv with the mutations to check linkage for:** every mutation should have its own row, the csv should have a header row titled "variant", and the mutations should be written in the following format: "A1664.0G". This file is created automatically with the variant_association_test.py script in AssociVar. For example:
+**Format for the csv with the mutations to check linkage for:** every mutation should have its own row, the csv should have a header row titled "variant", and the mutations should be written in the following format: "A1664.0G" (meaning mutation of base A in position 1664 to base G). This file is created automatically with the variant_association_test.py script in AssociVar. For example:
 
 **variant**
 ------ |

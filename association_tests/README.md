@@ -6,29 +6,40 @@ and thus are not independent of each other, while technical sequencing errors ar
 of each other in the population.
 
 
+### Requirements:
+BLAST (v2.7.1+)
+
+Anaconda python installation OR python (3.4+) with:
+- numpy
+- pandas
+- tqdm
+- matplotlib
+- scipy
+
 
 ## Running chi-square tests
 
-1. Run BLAST on all fastq files as described in [AccuNGS paper](https://github.com/SternLabTAU/AccuNGS).
-To do this, either use AccuNGS script or run BLAST separately as follows:
+1. Run BLAST on fastq file(s).
 
-   - BLAST (v2.7.1+) the merged fastq against the reference.
-Parameters:
-     - ref_genome - reference genome (FASTA format)
-     - in_fastq - fastq file
-     - max_num_alignments - maximum number of alignments (typically 10x of the length of the input file)
-     - pcID_blast - percents identity of each alignment to the reference. suggested for minion: 60.
-     - out_blast - blast output file
+   To run blast, first turn fastqs into fasta files (for example, using sed: "sed '/^@/!d;s//>/;N' FASTQ > FASTA"
 
-   - Typical use case:
-     - sed '/^@/!d;s//>/;N' ${in_fastq} > ${in_fasta} # fastq to fasta
-     - makeblastdb -in ${in_fasta} -dbtype nucl
-     - blastn -query ${ref_genome} -task blastn -db ${in_fasta} -outfmt "6 sseqid qstart qend qstrand sstart send sstrand length btop" -num_alignments ${max_num_alignments} -dust no -soft_masking F -perc_identity ${pcID_blast} -evalue 1e-7 -out ${out_blast}
+   Next, run BLAST (v2.7.1+) as follows:
+   
+   Parameters:
+     - REF_GENOME - reference genome (FASTA format)
+     - FASTA - fasta file
+     - MAX_NUM_ALIGNMENTS - maximum number of alignments (typically 10x the number of reads in file)
+     - PC_ID_BLAST - percents identity of each alignment to the reference. suggested for minion: 60.
+     - OUT_BLAST - blast output file
+
+   Commands
+     1. makeblastdb -in IN_FASTA -dbtype nucl
+     2. blastn -query REF_GENOME -taskblastn -db FASTA -outfmt "6 sseqid qstart qend qstrand sstart send sstrand length btop" -num_alignments MAX_NUM_ALIGNMENTS -dust no -soft_masking F -perc_identity PC_ID_BLAST -evalue 1e-7 -out OUT_BLAST
 
 
 2. Run parse_blasts.py to create two output files: a dataframe of all blast outputs and a dataframe
 containing every mutation per read from the blast outputs. The script gets an input directory containing blast
-results file/s (_.blast), and creates the two new csv files in the output directory.
+results file(s) (files with suffix .blast), and creates the two new csv files in the output directory.
 
    - usage: parse_blasts.py [-h] -i INPUT_DIR -o OUTPUT
 
@@ -96,3 +107,7 @@ blasts dataframe and mutations dataframe created in steps 2-3. The script also g
    - usage: variant_association_test.py [-h] -b INPUT_BLAST_DF -m INPUT_MUTATION_DF
                                    -p INPUT_CHOSEN_POSITIONS -o
                                    OUTPUT_DIR
+                                   
+ 
+ 
+
