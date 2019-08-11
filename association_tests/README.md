@@ -7,7 +7,7 @@ of each other in the population.
 
 
 ### Requirements:
-BLAST (v2.7.1+)
+BLAST (v2.2.30+)
 
 Anaconda python installation OR python (3.4+) with:
 - numpy
