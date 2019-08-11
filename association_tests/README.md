@@ -34,7 +34,7 @@ Anaconda python installation OR python (3.4+) with:
 
    Commands
      1. makeblastdb -in IN_FASTA -dbtype nucl
-     2. blastn -query REF_GENOME -taskblastn -db FASTA -outfmt "6 sseqid qstart qend qstrand sstart send sstrand length btop" -num_alignments MAX_NUM_ALIGNMENTS -dust no -soft_masking F -perc_identity PC_ID_BLAST -evalue 1e-7 -out OUT_BLAST
+     2. blastn -query REF_GENOME -task blastn -db FASTA -outfmt "6 sseqid qstart qend qstrand sstart send sstrand length btop" -num_alignments MAX_NUM_ALIGNMENTS -dust no -soft_masking F -perc_identity PC_ID_BLAST -evalue 1e-7 -out OUT_BLAST
 
 
 2. Run parse_blasts.py to create two output files: a dataframe of all blast outputs and a dataframe
