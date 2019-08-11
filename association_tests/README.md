@@ -46,7 +46,7 @@ results file(s) (files with suffix .blast), and creates the two new csv files in
 
 3. Run create_couples_index_file.py to create an index file used by the association test script.
 The file is a csv containing the pairs of positions to check, and also an association index for the
-association test script to use when being run as more than one job in parallel (choose number of jobs to split to in NUMBER_OF_JOBS).
+association test script to use when being run as more than one job in parallel which is recommended (choose number of jobs to split to in NUMBER_OF_JOBS).
 If planning to run as one job, choose 1 for -j, and on the next step (association_test.py) choose 0 for -j (PBS_JOB_ARRAY_ID).
 Start and end positions to test associations for are recommended as 30 positons away from the start and end of the
 reference sequence.
@@ -55,9 +55,9 @@ reference sequence.
                                     -j NUMBER_OF_JOBS -o OUTPUT_FILE
 
 
-4. Run association_test.py scripts, recommended as a job array. This uses the blasts dataframe (INPUT_BLAST_DF),
+4. Run association_test.py scripts, recommended to run as an HPC job array. This uses the blasts dataframe (INPUT_BLAST_DF),
 mutations dataframe (INPUT_MUTATION_DF) and the position couple index file (INPUT_POSITION_PAIRS_DF) created in steps 2-3. Each job runs chi square association tests for every pair of positions from the position couple index file for which the index matches the job id. It saves the contingency tables for every pair of positions, and a csv containing all of the chi2 results.
-All sequenced reads are required to span a certain part of the genome, by defualt this is from the start position to the end position specified in create_couple_index_file.py, but this can also be set to a larger area using start_pos_read and end_pos_read.
+All sequenced reads are required to span a certain part of the genome, by defualt this is from the start position to the end position specified in create_couple_index_file.py, but this can also be set to a larger area using start_pos_read and end_pos_read. If running as only one job, run with -j 0.
 
    - usage: association_test.py [-h] -b INPUT_BLAST_DF -m INPUT_MUTATION_DF -i
                            INPUT_POSITION_PAIRS_DF -o OUTPUT_DIR [-s
