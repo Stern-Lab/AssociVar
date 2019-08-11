@@ -45,7 +45,7 @@ def association_test(args):
     chi2_data = []
     
     for (i, j) in tqdm(position_tuple_list):
-        if not os.path.isfile(association_test_dir + str(i) + '_' + str(j) + '.csv') and not os.path.isfile(association_test_dir + str(j) + '_' + str(i) + '.csv'):
+        if not os.path.isfile(association_test_dir + str(i) + '_' + str(j) + '.csv'):
             temp_matrix = pd.DataFrame(np.zeros(shape=(2,2)), columns=[j,0], index=[i,0])
             b = blast_df.copy()
             m = mutations_df.copy()
@@ -71,12 +71,15 @@ def association_test(args):
             temp_matrix.at[i,0] = reads_with_mut_i_wt_j
             temp_matrix.at[0,j] = reads_with_wt_i_mut_j
             temp_matrix.at[0,0] = reads_with_wt_i_wt_j
+            temp_matrix.to_csv(association_test_dir + str(i) + '_' + str(j) + '.csv')
             # run association test on matrix and write results to file.
-            if temp_matrix.sum(axis=0).all() > 0 and temp_matrix.sum(axis=1).all() > 0:
-                temp_matrix.to_csv(association_test_dir + str(i) + '_' + str(j) + '.csv')
-                chi2, pvalue, dof, expected = scipy.stats.chi2_contingency(temp_matrix)
-                chi2_data.append((i,j,pvalue,chi2))
-                chi2_data.append((j,i,pvalue,chi2))
+        else:
+            temp_matrix = pd.read_csv(association_test_dir + str(i) + '_' + str(j) + '.csv', index_col=0)
+        if temp_matrix.sum(axis=0).all() > 0 and temp_matrix.sum(axis=1).all() > 0:
+            chi2, pvalue, dof, expected = scipy.stats.chi2_contingency(temp_matrix)
+            chi2_data.append((i,j,pvalue,chi2))
+            chi2_data.append((j,i,pvalue,chi2))
+        
             
     df = pd.DataFrame(chi2_data, columns=['pos1', 'pos2', 'pvalue', 'chi2'])
     df = df[(df.pos1.isin(range(args.start_pos_read, args.end_pos_read + 1))) & (df.pos2.isin(range(args.start_pos_read, args.end_pos_read + 1)))]
