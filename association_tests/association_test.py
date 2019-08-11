@@ -72,7 +72,6 @@ def association_test(args):
             temp_matrix.at[0,j] = reads_with_wt_i_mut_j
             temp_matrix.at[0,0] = reads_with_wt_i_wt_j
             temp_matrix.to_csv(association_test_dir + str(i) + '_' + str(j) + '.csv')
-            # run association test on matrix and write results to file.
         else:
             temp_matrix = pd.read_csv(association_test_dir + str(i) + '_' + str(j) + '.csv', index_col=0)
         if temp_matrix.sum(axis=0).all() > 0 and temp_matrix.sum(axis=1).all() > 0:
