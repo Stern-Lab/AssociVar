@@ -46,8 +46,8 @@ results file(s) (files with suffix .blast), and creates the two new csv files in
 
 3. Run create_couples_index_file.py to create an index file used by the association test script.
 The file is a csv containing the pairs of positions to check, and also an association index for the
-association test script to use when being run as more than one job in parallel which is recommended (choose number of jobs to split to in NUMBER_OF_JOBS).
-If planning to run as one job, choose 1 for -j, and on the next step (association_test.py) choose 0 for -j (PBS_JOB_ARRAY_ID).
+association test script to use when being run as more than one job in parallel (choose number of jobs to split to in NUMBER_OF_JOBS).
+If planning to run as one job (only recommended for small amounts of data or short genomes), choose 1 for -j, and on the next step (association_test.py) choose 0 for -j (PBS_JOB_ARRAY_ID).
 Start and end positions to test associations for are recommended as 30 positons away from the start and end of the
 reference sequence.
 
