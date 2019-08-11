@@ -5,3 +5,5 @@ This is the repository accompanying the paper Sequencing Complete Genomes of RNA
 
 Use the pipeline under association_tests to find the true variants in your sequencing data.
 Next, use the scripts in strains_and_linkage_between_variants to find the relationship between these variants.
+
+Example directory contains an example run of this pipeline on real data, together with the pipeline outputs and final results.
