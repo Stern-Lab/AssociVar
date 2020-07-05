@@ -21,7 +21,7 @@ if __name__ == "__main__":
         parser.print_help()
         parser.exit(1)
     dfs = []
-    files = [args.input_results_directory + '/' + f + '/chi2_results.csv' for f in os.listdir(args.input_results_directory)]
+    files = [args.input_results_directory + '/' + f + '/chi2_results.csv' for f in os.listdir(args.input_results_directory) if not f.startswith('.')]
     for f in tqdm(files):
         dfs.append(pd.read_csv(f))
     df = pd.concat(dfs)
